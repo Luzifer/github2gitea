@@ -25,6 +25,7 @@ var (
 		GiteaURL         string `flag:"gitea-url" default:"" description:"URL of the Gitea instance" validate:"nonzero"`
 		GithubToken      string `flag:"github-token" default:"" description:"Github access token" validate:"nonzero"`
 		LogLevel         string `flag:"log-level" default:"info" description:"Log level (debug, info, warn, error, fatal)"`
+		MigrateArchived  bool   `flag:"migrate-archived" default:"false" description:"Create migrations for archived repos"`
 		MigratePrivate   bool   `flag:"migrate-private" default:"true" description:"Migrate private repos (the given Github Token will be entered as sync credential!)"`
 		SourceExpression string `flag:"source-expression" default:"" description:"Regular expression to match the full name of the source repo (i.e. '^Luzifer/.*$')" validate:"nonzero"`
 		TargetUser       int64  `flag:"target-user" default:"0" description:"ID of the User / Organization in Gitea to assign the repo to" validate:"nonzero"`
@@ -101,6 +102,12 @@ func fetchGithubRepos() ([]*github.Repository, error) {
 
 		for _, r := range repos {
 			if !sourceExpr.MatchString(*r.FullName) {
+				log.WithField("repo", *r.FullName).Debug("Skip: Name does not match")
+				continue
+			}
+
+			if !cfg.MigrateArchived && boolFromPtr(r.Archived) {
+				log.WithField("repo", *r.FullName).Debug("Skip: Archived")
 				continue
 			}
 
