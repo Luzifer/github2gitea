@@ -34,6 +34,7 @@ Usage of github2gitea:
       --migrate-archived           Create migrations for archived repos
       --migrate-forks              Create migrations for forked repos
       --migrate-private            Migrate private repos (the given Github Token will be entered as sync credential!) (default true)
+      --no-mirror                  Do not enable mirroring but instad do a one-time clone
       --source-expression string   Regular expression to match the full name of the source repo (i.e. '^Luzifer/.*$')
       --target-user int            ID of the User / Organization in Gitea to assign the repo to
       --target-user-name string    Username of the given ID (to check whether repo already exists)
@@ -52,6 +53,7 @@ You can see there is a lot of options you need to set so here is a little walk-t
 | `migrate-archived` | | Set to `true` to also create migrations for archived repos |
 | `migrate-forks` | | Set to `true` to also create migrations for forked repos |
 | `migrate-private` | | Set to `false` not to create migrations for private repos |
+| `no-mirror` | | Set to `true` not to set up mirroring but only clone the repo |
 | `source-expression` | X | Regular expression to match the *full name* of the repo: `^Luzifer/` will for example match `Luzifer/github2gitea` |
 | `target-user` | X | ID of your Gitea user or organization (ask your instance admin to look it up in the site admin) |
 | `target-user-name` | X | Name of the user the ID belongs to |

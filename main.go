@@ -28,6 +28,7 @@ var (
 		MigrateArchived  bool   `flag:"migrate-archived" default:"false" description:"Create migrations for archived repos"`
 		MigrateForks     bool   `flag:"migrate-forks" default:"false" description:"Create migrations for forked repos"`
 		MigratePrivate   bool   `flag:"migrate-private" default:"true" description:"Migrate private repos (the given Github Token will be entered as sync credential!)"`
+		NoMirror         bool   `flag:"no-mirror" default:"false" description:"Do not enable mirroring but instad do a one-time clone"`
 		SourceExpression string `flag:"source-expression" default:"" description:"Regular expression to match the full name of the source repo (i.e. '^Luzifer/.*$')" validate:"nonzero"`
 		TargetUser       int64  `flag:"target-user" default:"0" description:"ID of the User / Organization in Gitea to assign the repo to" validate:"nonzero"`
 		TargetUserName   string `flag:"target-user-name" default:"" description:"Username of the given ID (to check whether repo already exists)" validate:"nonzero"`

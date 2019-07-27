@@ -28,7 +28,7 @@ func createMigrationRequestFromGithubRepo(gr *github.Repository) createMigration
 		CloneAddr:    strFromPtr(gr.CloneURL),
 		Description:  strFromPtr(gr.Description),
 		Issues:       boolFromPtr(gr.HasIssues),
-		Mirror:       true,
+		Mirror:       !cfg.NoMirror,
 		Private:      boolFromPtr(gr.Private),
 		PullRequests: boolFromPtr(gr.HasIssues),
 		RepoName:     strFromPtr(gr.Name),
