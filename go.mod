@@ -1,4 +1,4 @@
-module github.com/Luzifer/create-gitea-migration
+module github.com/Luzifer/github2gitea
 
 go 1.12
 
