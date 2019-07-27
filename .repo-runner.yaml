@@ -1,7 +1,7 @@
 ---
 
 image: "reporunner/golang-alpine"
-checkout_dir: /go/src/github.com/Luzifer/vault2env
+checkout_dir: /go/src/github.com/Luzifer/github2gitea
 
 commands:
   - make publish
