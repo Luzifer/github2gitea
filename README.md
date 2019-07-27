@@ -16,6 +16,11 @@ When creating the migration
 - for private repos a Github token will be added to the sync URL
 - for private repos on Github a private repo will be created in Gitea
 
+## Installation
+
+- Download a pre-built binary from the [releases](https://github.com/Luzifer/github2gitea/releases)
+- `go get -u github.com/Luzifer/github2gitea` the tool
+
 ## Usage
 
 ```console
