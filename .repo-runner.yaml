@@ -1,0 +1,11 @@
+---
+
+image: "reporunner/golang-alpine"
+checkout_dir: /go/src/github.com/Luzifer/vault2env
+
+commands:
+  - make publish
+
+environment:
+  CGO_ENABLED: 0
+  GO111MODULE: on
