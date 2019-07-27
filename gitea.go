@@ -19,7 +19,7 @@ type createMigrationRequest struct {
 	PullRequests bool `json:"pull_requests"`
 	//Releases     bool   `json:"releases"`
 	RepoName string `json:"repo_name"`
-	Uid      int64  `json:"uid"`
+	UID      int64  `json:"uid"`
 	Wiki     bool   `json:"wiki"`
 }
 
@@ -32,7 +32,7 @@ func createMigrationRequestFromGithubRepo(gr *github.Repository) createMigration
 		Private:      boolFromPtr(gr.Private),
 		PullRequests: boolFromPtr(gr.HasIssues),
 		RepoName:     strFromPtr(gr.Name),
-		Uid:          cfg.TargetUser,
+		UID:          cfg.TargetUser,
 		Wiki:         boolFromPtr(gr.HasWiki),
 	}
 
