@@ -31,6 +31,7 @@ Usage of github2gitea:
       --gitea-url string           URL of the Gitea instance
       --github-token string        Github access token
       --log-level string           Log level (debug, info, warn, error, fatal) (default "info")
+      --mapping-file string        File containing several mappings to execute in one run
       --migrate-archived           Create migrations for archived repos
       --migrate-forks              Create migrations for forked repos
       --migrate-private            Migrate private repos (the given Github Token will be entered as sync credential!) (default true)
@@ -50,12 +51,38 @@ You can see there is a lot of options you need to set so here is a little walk-t
 | `gitea-url` | X | The URL your Gitea is available at. For example: `https://try.gitea.io/` |
 | `github-token` | X | Fetch it in your user-settings under "Developer Settings" and assign `repo` permissions |
 | `log-level` | | The levels used are `debug`, `info`, `warn`, `error` - Most users should use `info` |
+| `mapping-file` | (X) | Executes more than one mapping in one execution to save Github requests |
 | `migrate-archived` | | Set to `true` to also create migrations for archived repos |
 | `migrate-forks` | | Set to `true` to also create migrations for forked repos |
 | `migrate-private` | | Set to `false` not to create migrations for private repos |
 | `no-mirror` | | Set to `true` not to set up mirroring but only clone the repo |
-| `source-expression` | X | Regular expression to match the *full name* of the repo: `^Luzifer/` will for example match `Luzifer/github2gitea` |
-| `target-user` | X | ID of your Gitea user or organization (ask your instance admin to look it up in the site admin) |
-| `target-user-name` | X | Name of the user the ID belongs to |
+| `source-expression` | (X) | Regular expression to match the *full name* of the repo: `^Luzifer/` will for example match `Luzifer/github2gitea` |
+| `target-user` | (X) | ID of your Gitea user or organization (ask your instance admin to look it up in the site admin) |
+| `target-user-name` | (X) | Name of the user the ID belongs to |
 
 During the `dry-run` github2gitea will print warnings for any action not executed due to the dry run. Keep an eye on the logs.
+
+You need to specify either a `mapping-file` or `source-expression`, `target-user` and `target-user-name`. If both are specified the `mapping-file` wins and the CLI parameters are not used.
+
+### Mapping-File
+
+The format of the file is quite simple and in the end reflects the options you can use on the CLI:
+
+```yaml
+---
+
+mappings:
+  - source_expression: '^Luzifer/'
+    target_user: 1
+    target_user_name: luzifer
+
+  - source_expression: '^luzifer-ansible/'
+    target_user: 3
+    target_user_name: luzifer-ansible
+
+  - source_expression: '^luzifer-docker/'
+    target_user: 2
+    target_user_name: luzifer-docker
+
+...
+```
