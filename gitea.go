@@ -23,7 +23,7 @@ type createMigrationRequest struct {
 	Wiki     bool   `json:"wiki"`
 }
 
-func createMigrationRequestFromGithubRepo(gr *github.Repository) createMigrationRequest {
+func createMigrationRequestFromGithubRepo(gr *github.Repository, repoMapping *mapping) createMigrationRequest {
 	cmr := createMigrationRequest{
 		CloneAddr:    strFromPtr(gr.CloneURL),
 		Description:  strFromPtr(gr.Description),
@@ -32,7 +32,7 @@ func createMigrationRequestFromGithubRepo(gr *github.Repository) createMigration
 		Private:      boolFromPtr(gr.Private),
 		PullRequests: boolFromPtr(gr.HasIssues),
 		RepoName:     strFromPtr(gr.Name),
-		UID:          cfg.TargetUser,
+		UID:          repoMapping.TargetUser,
 		Wiki:         boolFromPtr(gr.HasWiki),
 	}
 

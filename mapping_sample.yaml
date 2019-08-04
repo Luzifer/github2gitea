@@ -1,0 +1,16 @@
+---
+
+mappings:
+  - source_expression: '^Luzifer/'
+    target_user: 1
+    target_user_name: luzifer
+
+  - source_expression: '^luzifer-ansible/'
+    target_user: 3
+    target_user_name: luzifer-ansible
+
+  - source_expression: '^luzifer-docker/'
+    target_user: 2
+    target_user_name: luzifer-docker
+
+...

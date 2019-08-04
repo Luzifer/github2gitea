@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/Luzifer/rconfig/v2"
@@ -25,15 +24,18 @@ var (
 		GiteaURL         string `flag:"gitea-url" default:"" description:"URL of the Gitea instance" validate:"nonzero"`
 		GithubToken      string `flag:"github-token" default:"" description:"Github access token" validate:"nonzero"`
 		LogLevel         string `flag:"log-level" default:"info" description:"Log level (debug, info, warn, error, fatal)"`
+		MappingFile      string `flag:"mapping-file" default:"" description:"File containing several mappings to execute in one run"`
 		MigrateArchived  bool   `flag:"migrate-archived" default:"false" description:"Create migrations for archived repos"`
 		MigrateForks     bool   `flag:"migrate-forks" default:"false" description:"Create migrations for forked repos"`
 		MigratePrivate   bool   `flag:"migrate-private" default:"true" description:"Migrate private repos (the given Github Token will be entered as sync credential!)"`
 		NoMirror         bool   `flag:"no-mirror" default:"false" description:"Do not enable mirroring but instad do a one-time clone"`
-		SourceExpression string `flag:"source-expression" default:"" description:"Regular expression to match the full name of the source repo (i.e. '^Luzifer/.*$')" validate:"nonzero"`
-		TargetUser       int64  `flag:"target-user" default:"0" description:"ID of the User / Organization in Gitea to assign the repo to" validate:"nonzero"`
-		TargetUserName   string `flag:"target-user-name" default:"" description:"Username of the given ID (to check whether repo already exists)" validate:"nonzero"`
+		SourceExpression string `flag:"source-expression" default:"" description:"Regular expression to match the full name of the source repo (i.e. '^Luzifer/.*$')"`
+		TargetUser       int64  `flag:"target-user" default:"0" description:"ID of the User / Organization in Gitea to assign the repo to"`
+		TargetUserName   string `flag:"target-user-name" default:"" description:"Username of the given ID (to check whether repo already exists)"`
 		VersionAndExit   bool   `flag:"version" default:"false" description:"Prints current version and exits"`
 	}{}
+
+	mappings *mapFile
 
 	version = "dev"
 )
@@ -57,11 +59,33 @@ func init() {
 }
 
 func main() {
+	mappings = newMapFile()
+
+	switch {
+
+	case cfg.MappingFile != "":
+		m, err := loadMapFile(cfg.MappingFile)
+		if err != nil {
+			log.WithError(err).Fatal("Unable to load mappings file")
+		}
+		mappings = m
+
+	case cfg.SourceExpression != "" && cfg.TargetUserName != "" && cfg.TargetUser > 0:
+		mappings.Mappings = []mapping{{
+			SourceExpression: cfg.SourceExpression,
+			TargetUser:       cfg.TargetUser,
+			TargetUserName:   cfg.TargetUserName,
+		}}
+
+	default:
+		log.Fatal("No mappings are defined")
+
+	}
+
 	log.WithFields(log.Fields{
-		"dry-run":     cfg.DryRun,
-		"source":      cfg.SourceExpression,
-		"target-user": cfg.TargetUserName,
-		"version":     version,
+		"dry-run":         cfg.DryRun,
+		"map_definitions": len(mappings.Mappings),
+		"version":         version,
 	}).Info("create-gitea-migration started")
 
 	log.Info("Collecting source repos...")
@@ -92,8 +116,6 @@ func fetchGithubRepos() ([]*github.Repository, error) {
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
-	sourceExpr := regexp.MustCompile(cfg.SourceExpression)
-
 	// get all pages of results
 	var allRepos []*github.Repository
 	for {
@@ -103,8 +125,8 @@ func fetchGithubRepos() ([]*github.Repository, error) {
 		}
 
 		for _, r := range repos {
-			if !sourceExpr.MatchString(*r.FullName) {
-				log.WithField("repo", *r.FullName).Debug("Skip: Name does not match")
+			if !mappings.MappingAvailable(*r.FullName) {
+				log.WithField("repo", *r.FullName).Debug("Skip: No mapping matches repo name")
 				continue
 			}
 
@@ -132,12 +154,15 @@ func fetchGithubRepos() ([]*github.Repository, error) {
 }
 
 func giteaCreateMigration(gr *github.Repository) error {
+	repoMapping := mappings.GetMapping(*gr.FullName)
+
 	logger := log.WithFields(log.Fields{
-		"repo":    strFromPtr(gr.Name),
-		"private": boolFromPtr(gr.Private),
+		"private":     boolFromPtr(gr.Private),
+		"source_repo": strFromPtr(gr.FullName),
+		"target_repo": strings.Join([]string{repoMapping.TargetUserName, strFromPtr(gr.Name)}, "/"),
 	})
 
-	req, _ := http.NewRequest(http.MethodGet, giteaURL(strings.Join([]string{"api/v1/repos", cfg.TargetUserName, strFromPtr(gr.Name)}, "/")), nil)
+	req, _ := http.NewRequest(http.MethodGet, giteaURL(strings.Join([]string{"api/v1/repos", repoMapping.TargetUserName, strFromPtr(gr.Name)}, "/")), nil)
 	req.Header.Set("Authorization", "token "+cfg.GiteaToken)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -151,7 +176,7 @@ func giteaCreateMigration(gr *github.Repository) error {
 		return nil
 	}
 
-	cmr := createMigrationRequestFromGithubRepo(gr)
+	cmr := createMigrationRequestFromGithubRepo(gr, repoMapping)
 
 	body := new(bytes.Buffer)
 	if err := json.NewEncoder(body).Encode(cmr); err != nil {
